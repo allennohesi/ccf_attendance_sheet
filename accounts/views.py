@@ -20,6 +20,7 @@ from .forms import (
     UserRegistrationForm,
     UserProfileUpdateForm,
 )
+from .media_utils import local_media_enabled
 from .models import Role, User
 from .signals import build_qr_png
 
@@ -56,7 +57,11 @@ def register_view(request):
 
 def admin_setup_view(request):
     if User.objects.filter(is_superuser=True).exists():
-        raise Http404
+        messages.info(
+            request,
+            "An admin account already exists. Please sign in.",
+        )
+        return redirect("accounts:login")
 
     if request.user.is_authenticated:
         return redirect("accounts:dashboard")
@@ -131,6 +136,11 @@ def complete_profile_view(request):
             user.is_profile_completed = True
             user.save()
             messages.success(request, "Your profile has been completed successfully.")
+            if not local_media_enabled():
+                messages.info(
+                    request,
+                    "Profile photo upload is not available on this server. Your initials will be shown instead.",
+                )
             return redirect("accounts:dashboard")
     else:
         form = CompleteProfileForm(instance=request.user)

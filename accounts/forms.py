@@ -14,7 +14,36 @@ from .field_themes import (
     TW_SELECT_MULTI_ROLES,
     TW_TEXTAREA,
 )
+from .media_utils import local_media_enabled
 from .models import Role, RoleCode, User
+
+
+class AvatarSaveMixin:
+    def _prepare_avatar_for_save(self, user):
+        if local_media_enabled() or not self.files.get("avatar"):
+            return user
+        if user.pk:
+            user.avatar = User.objects.only("avatar").get(pk=user.pk).avatar
+        else:
+            user.avatar = None
+        return user
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user = self._prepare_avatar_for_save(user)
+        if commit:
+            user.save()
+            if hasattr(self, "save_m2m"):
+                self.save_m2m()
+        return user
+
+
+def _configure_avatar_field(field):
+    if local_media_enabled():
+        return
+    field.required = False
+    field.help_text = "Photo upload is not available on this server. Your initials will be shown instead."
+    field.disabled = True
 
 
 class StyledFormMixin:
@@ -102,7 +131,7 @@ class AdminSetupForm(StyledFormMixin, UserCreationForm):
         return user
 
 
-class CompleteProfileForm(StyledFormMixin, forms.ModelForm):
+class CompleteProfileForm(AvatarSaveMixin, StyledFormMixin, forms.ModelForm):
     social_media = forms.CharField(required=False)
     is_part_of_dgroup = forms.TypedChoiceField(
         choices=YES_NO_CHOICES,
@@ -144,6 +173,7 @@ class CompleteProfileForm(StyledFormMixin, forms.ModelForm):
                 "capture": "user",
             }
         )
+        _configure_avatar_field(self.fields["avatar"])
         social_media_value = self.initial.get("social_media")
         if social_media_value in ({}, "{}", None):
             self.initial["social_media"] = ""
@@ -180,7 +210,7 @@ class CompleteProfileForm(StyledFormMixin, forms.ModelForm):
         return cleaned_data
 
 
-class UserProfileUpdateForm(StyledFormMixin, forms.ModelForm):
+class UserProfileUpdateForm(AvatarSaveMixin, StyledFormMixin, forms.ModelForm):
     social_media = forms.CharField(required=False)
     is_part_of_dgroup = forms.TypedChoiceField(
         choices=YES_NO_CHOICES,
@@ -225,6 +255,7 @@ class UserProfileUpdateForm(StyledFormMixin, forms.ModelForm):
                 "capture": "user",
             }
         )
+        _configure_avatar_field(self.fields["avatar"])
         social_media_value = self.initial.get("social_media")
         if social_media_value in ({}, "{}", None):
             self.initial["social_media"] = ""
@@ -277,7 +308,7 @@ class EmailAuthenticationForm(AuthenticationForm):
             field.widget.attrs["class"] = TW_INPUT
 
 
-class AdminUserUpdateForm(StyledFormMixin, forms.ModelForm):
+class AdminUserUpdateForm(AvatarSaveMixin, StyledFormMixin, forms.ModelForm):
     roles = forms.ModelMultipleChoiceField(
         queryset=Role.objects.none(),
         required=False,
@@ -337,6 +368,7 @@ class AdminUserUpdateForm(StyledFormMixin, forms.ModelForm):
         self.fields["avatar"].widget = forms.ClearableFileInput(
             attrs={"class": TW_FILE, "accept": "image/*"}
         )
+        _configure_avatar_field(self.fields["avatar"])
         self.fields["roles"].queryset = Role.objects.filter(is_active=True).order_by(
             "name"
         )
