@@ -82,17 +82,23 @@ class AdminSetupForm(StyledFormMixin, UserCreationForm):
         self.style_fields()
 
     def save(self, commit=True):
-        user = super().save(commit=False)
-        user.is_staff = True
-        user.is_superuser = True
+        user = User.objects.create_superuser(
+            email=self.cleaned_data["email"],
+            password=self.cleaned_data["password1"],
+            first_name=self.cleaned_data["first_name"],
+            last_name=self.cleaned_data["last_name"],
+        )
         user.is_profile_completed = True
-        if commit:
-            user.save()
+        user.save(update_fields=["is_profile_completed"])
+
+        admin_role = Role.objects.filter(pk=1).first()
+        if admin_role is None:
             admin_role, _ = Role.objects.get_or_create(
                 code=RoleCode.ADMIN,
                 defaults={"name": "Admin", "is_active": True},
             )
-            user.roles.set([admin_role])
+        user.roles.set([admin_role])
+        self.instance = user
         return user
 
 

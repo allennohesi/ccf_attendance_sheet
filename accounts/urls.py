@@ -5,7 +5,6 @@ from .forms import TailwindPasswordChangeForm
 
 from .views import (
     UserLoginView,
-    admin_setup_view,
     complete_profile_view,
     dashboard_view,
     edit_profile_view,
@@ -27,7 +26,6 @@ urlpatterns = [
     path("login/", UserLoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("register/", register_view, name="register"),
-    path("setup/<slug:secret>/", admin_setup_view, name="admin-setup"),
     path("complete-profile/", complete_profile_view, name="complete-profile"),
     path("profile/", profile_view, name="profile"),
     path("profile/edit/", edit_profile_view, name="edit-profile"),

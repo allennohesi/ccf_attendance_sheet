@@ -1,5 +1,3 @@
-import os
-
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -55,11 +53,7 @@ def register_view(request):
     return render(request, "accounts/register.html", {"form": form})
 
 
-def admin_setup_view(request, secret):
-    setup_secret = os.getenv("ADMIN_SETUP_SECRET", "").strip()
-    if not setup_secret or secret != setup_secret:
-        raise Http404
-
+def admin_setup_view(request):
     if User.objects.filter(is_superuser=True).exists():
         raise Http404
 
@@ -70,7 +64,10 @@ def admin_setup_view(request, secret):
         form = AdminSetupForm(request.POST)
         if form.is_valid():
             user = form.save()
-            messages.success(request, "Admin account created. You are now signed in.")
+            messages.success(
+                request,
+                "Admin account created. You are signed in with full admin access.",
+            )
             login(request, user)
             return redirect("accounts:dashboard")
     else:
