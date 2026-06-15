@@ -72,6 +72,30 @@ class UserRegistrationForm(StyledFormMixin, UserCreationForm):
         return user
 
 
+class AdminSetupForm(StyledFormMixin, UserCreationForm):
+    class Meta:
+        model = User
+        fields = ("email", "first_name", "last_name", "password1", "password2")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.style_fields()
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.is_staff = True
+        user.is_superuser = True
+        user.is_profile_completed = True
+        if commit:
+            user.save()
+            admin_role, _ = Role.objects.get_or_create(
+                code=RoleCode.ADMIN,
+                defaults={"name": "Admin", "is_active": True},
+            )
+            user.roles.set([admin_role])
+        return user
+
+
 class CompleteProfileForm(StyledFormMixin, forms.ModelForm):
     social_media = forms.CharField(required=False)
     is_part_of_dgroup = forms.TypedChoiceField(

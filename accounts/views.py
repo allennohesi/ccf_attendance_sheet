@@ -1,9 +1,11 @@
+import os
+
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.views import LoginView
 from django.db.models import Count, Prefetch, Q
-from django.http import JsonResponse
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.html import escape
@@ -13,6 +15,7 @@ from attendance.models import Attendance
 
 from .forms import (
     AdminUserUpdateForm,
+    AdminSetupForm,
     CompleteProfileForm,
     EmailAuthenticationForm,
     RoleForm,
@@ -50,6 +53,29 @@ def register_view(request):
     else:
         form = UserRegistrationForm()
     return render(request, "accounts/register.html", {"form": form})
+
+
+def admin_setup_view(request, secret):
+    setup_secret = os.getenv("ADMIN_SETUP_SECRET", "").strip()
+    if not setup_secret or secret != setup_secret:
+        raise Http404
+
+    if User.objects.filter(is_superuser=True).exists():
+        raise Http404
+
+    if request.user.is_authenticated:
+        return redirect("accounts:dashboard")
+
+    if request.method == "POST":
+        form = AdminSetupForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            messages.success(request, "Admin account created. You are now signed in.")
+            login(request, user)
+            return redirect("accounts:dashboard")
+    else:
+        form = AdminSetupForm()
+    return render(request, "accounts/admin_setup.html", {"form": form})
 
 
 def _staff_required(user):
