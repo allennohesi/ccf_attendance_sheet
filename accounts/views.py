@@ -3,7 +3,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.views import LoginView
 from django.db.models import Count, Prefetch, Q
-from django.http import Http404, JsonResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.html import escape
@@ -21,6 +21,7 @@ from .forms import (
     UserProfileUpdateForm,
 )
 from .models import Role, User
+from .signals import build_qr_png
 
 
 class UserLoginView(LoginView):
@@ -73,6 +74,12 @@ def admin_setup_view(request):
     else:
         form = AdminSetupForm()
     return render(request, "accounts/admin_setup.html", {"form": form})
+
+
+@login_required
+def user_qr_code_view(request):
+    png = build_qr_png(request.user.qr_uuid)
+    return HttpResponse(png, content_type="image/png")
 
 
 def _staff_required(user):

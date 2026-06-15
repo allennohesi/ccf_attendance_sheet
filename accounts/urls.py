@@ -17,6 +17,7 @@ from .views import (
     user_edit_view,
     user_management_data_view,
     user_management_view,
+    user_qr_code_view,
 )
 
 app_name = "accounts"
@@ -26,6 +27,7 @@ urlpatterns = [
     path("login/", UserLoginView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("register/", register_view, name="register"),
+    path("qr/", user_qr_code_view, name="qr-code"),
     path("complete-profile/", complete_profile_view, name="complete-profile"),
     path("profile/", profile_view, name="profile"),
     path("profile/edit/", edit_profile_view, name="edit-profile"),
