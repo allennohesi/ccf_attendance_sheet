@@ -14,13 +14,13 @@ from .field_themes import (
     TW_SELECT_MULTI_ROLES,
     TW_TEXTAREA,
 )
-from .media_utils import local_media_enabled
+from .media_utils import media_uploads_enabled
 from .models import Role, RoleCode, User
 
 
 class AvatarSaveMixin:
     def _prepare_avatar_for_save(self, user):
-        if local_media_enabled() or not self.files.get("avatar"):
+        if media_uploads_enabled():
             return user
         if user.pk:
             user.avatar = User.objects.only("avatar").get(pk=user.pk).avatar
@@ -38,12 +38,10 @@ class AvatarSaveMixin:
         return user
 
 
-def _configure_avatar_field(field):
-    if local_media_enabled():
+def _configure_avatar_field(form):
+    if media_uploads_enabled():
         return
-    field.required = False
-    field.help_text = "Photo upload is not available on this server. Your initials will be shown instead."
-    field.disabled = True
+    form.fields.pop("avatar", None)
 
 
 class StyledFormMixin:
@@ -166,14 +164,15 @@ class CompleteProfileForm(AvatarSaveMixin, StyledFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.style_fields()
-        self.fields["avatar"].widget = forms.ClearableFileInput(
-            attrs={
-                "class": TW_FILE,
-                "accept": "image/*",
-                "capture": "user",
-            }
-        )
-        _configure_avatar_field(self.fields["avatar"])
+        _configure_avatar_field(self)
+        if "avatar" in self.fields:
+            self.fields["avatar"].widget = forms.ClearableFileInput(
+                attrs={
+                    "class": TW_FILE,
+                    "accept": "image/*",
+                    "capture": "user",
+                }
+            )
         social_media_value = self.initial.get("social_media")
         if social_media_value in ({}, "{}", None):
             self.initial["social_media"] = ""
@@ -248,14 +247,15 @@ class UserProfileUpdateForm(AvatarSaveMixin, StyledFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.style_fields()
-        self.fields["avatar"].widget = forms.ClearableFileInput(
-            attrs={
-                "class": TW_FILE,
-                "accept": "image/*",
-                "capture": "user",
-            }
-        )
-        _configure_avatar_field(self.fields["avatar"])
+        _configure_avatar_field(self)
+        if "avatar" in self.fields:
+            self.fields["avatar"].widget = forms.ClearableFileInput(
+                attrs={
+                    "class": TW_FILE,
+                    "accept": "image/*",
+                    "capture": "user",
+                }
+            )
         social_media_value = self.initial.get("social_media")
         if social_media_value in ({}, "{}", None):
             self.initial["social_media"] = ""
@@ -365,10 +365,11 @@ class AdminUserUpdateForm(AvatarSaveMixin, StyledFormMixin, forms.ModelForm):
         self.fields["is_part_of_dgroup"].widget.attrs["class"] = TW_SELECT
         self.fields["is_profile_completed"].widget.attrs["class"] = TW_SELECT
         self.fields["is_active"].widget.attrs["class"] = TW_SELECT
-        self.fields["avatar"].widget = forms.ClearableFileInput(
-            attrs={"class": TW_FILE, "accept": "image/*"}
-        )
-        _configure_avatar_field(self.fields["avatar"])
+        _configure_avatar_field(self)
+        if "avatar" in self.fields:
+            self.fields["avatar"].widget = forms.ClearableFileInput(
+                attrs={"class": TW_FILE, "accept": "image/*"}
+            )
         self.fields["roles"].queryset = Role.objects.filter(is_active=True).order_by(
             "name"
         )

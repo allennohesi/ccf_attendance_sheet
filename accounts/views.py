@@ -20,7 +20,7 @@ from .forms import (
     UserRegistrationForm,
     UserProfileUpdateForm,
 )
-from .media_utils import local_media_enabled
+from .media_utils import media_uploads_enabled
 from .models import Role, User
 from .signals import build_qr_png
 
@@ -136,7 +136,7 @@ def complete_profile_view(request):
             user.is_profile_completed = True
             user.save()
             messages.success(request, "Your profile has been completed successfully.")
-            if not local_media_enabled():
+            if not media_uploads_enabled():
                 messages.info(
                     request,
                     "Profile photo upload is not available on this server. Your initials will be shown instead.",
