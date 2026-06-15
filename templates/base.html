@@ -1,0 +1,203 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CCF Attendance{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Plus Jakarta Sans", "system-ui", "Segoe UI", "sans-serif"],
+                    },
+                    colors: {
+                        brand: {
+                            50: "#f0fdfa",
+                            100: "#ccfbf1",
+                            500: "#14b8a6",
+                            600: "#0d9488",
+                            700: "#0f766e",
+                            900: "#134e4a",
+                        },
+                        navy: {
+                            800: "#1e293b",
+                            900: "#0f172a",
+                            950: "#020617",
+                        },
+                    },
+                    boxShadow: {
+                        card: "0 1px 2px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.06)",
+                        "card-hover": "0 4px 24px rgba(15,23,42,0.08), 0 1px 3px rgba(15,23,42,0.04)",
+                    },
+                },
+            },
+        };
+    </script>
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <style type="text/tailwindcss">
+        @layer components {
+            .app-primary {
+                @apply inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-navy-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-navy-950 focus:outline-none focus:ring-2 focus:ring-brand-600/40 focus:ring-offset-2 active:scale-[0.98];
+            }
+            .app-secondary {
+                @apply inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400/20 focus:ring-offset-2;
+            }
+            .app-ghost {
+                @apply inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none;
+            }
+            .app-danger {
+                @apply inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-400/30;
+            }
+            .app-nav-link {
+                @apply inline-flex shrink-0 items-center rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-900;
+            }
+            .app-nav-link-active {
+                @apply bg-slate-100 text-navy-900 font-semibold;
+            }
+            .app-card {
+                @apply rounded-2xl border border-slate-200/80 bg-white shadow-card;
+            }
+            .app-card-header {
+                @apply border-b border-slate-100 px-5 py-4 sm:px-6;
+            }
+            .app-card-body {
+                @apply p-5 sm:p-6;
+            }
+            .app-page-title {
+                @apply text-2xl font-bold tracking-tight text-navy-900 sm:text-3xl;
+            }
+            .app-page-subtitle {
+                @apply mt-1.5 text-sm leading-relaxed text-slate-500 sm:text-base;
+            }
+            .app-stat {
+                @apply app-card p-5 sm:p-6;
+            }
+            .app-stat-label {
+                @apply text-xs font-semibold uppercase tracking-wider text-slate-500;
+            }
+            .app-stat-value {
+                @apply mt-2 text-3xl font-bold tabular-nums tracking-tight text-navy-900;
+            }
+            .app-badge {
+                @apply inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-xs font-semibold text-slate-700;
+            }
+            .app-badge-brand {
+                @apply inline-flex items-center rounded-full border border-brand-100 bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700;
+            }
+            .app-form-card {
+                @apply app-card app-card-body space-y-5;
+            }
+            .app-label {
+                @apply mb-1.5 block text-sm font-semibold text-slate-700;
+            }
+            .app-table {
+                @apply w-full border-collapse text-left text-sm text-slate-800;
+            }
+            .app-table thead tr {
+                @apply border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500;
+            }
+            .app-table th {
+                @apply px-4 py-3;
+            }
+            .app-table tbody {
+                @apply divide-y divide-slate-100;
+            }
+            .app-table td {
+                @apply px-4 py-3;
+            }
+            .app-table tbody tr {
+                @apply transition hover:bg-slate-50/80;
+            }
+            .app-alert {
+                @apply rounded-xl border px-4 py-3 text-sm font-medium;
+            }
+            .app-alert-info {
+                @apply app-alert border-slate-200 bg-white text-slate-700 shadow-sm;
+            }
+            .app-alert-success {
+                @apply app-alert border-emerald-200 bg-emerald-50 text-emerald-800;
+            }
+            .app-alert-error {
+                @apply app-alert border-red-200 bg-red-50 text-red-800;
+            }
+            .app-alert-warning {
+                @apply app-alert border-amber-200 bg-amber-50 text-amber-900;
+            }
+            .app-section-label {
+                @apply text-xs font-bold uppercase tracking-widest text-brand-600;
+            }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="flex min-h-full flex-col font-sans text-slate-800 antialiased">
+<header class="sticky top-0 z-50 shrink-0 border-b border-slate-200/80 bg-white/90 backdrop-blur-md">
+    <div class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <a
+            class="group flex min-w-0 shrink-0 items-center gap-2.5"
+            href="{% if user.is_authenticated %}{% url 'accounts:dashboard' %}{% else %}{% url 'accounts:home' %}{% endif %}"
+        >
+            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy-900 text-xs font-bold text-white shadow-sm transition group-hover:bg-brand-600">CCF</span>
+            <span class="hidden min-w-0 sm:block">
+                <span class="block truncate text-sm font-bold tracking-tight text-navy-900">CCF Butuan</span>
+                <span class="block truncate text-[0.65rem] font-medium uppercase tracking-wider text-slate-400">Activities &amp; Attendance</span>
+            </span>
+        </a>
+        <nav
+            class="flex min-w-0 max-w-full flex-1 items-center justify-end gap-0.5 overflow-x-auto [scrollbar-width:none] sm:gap-1 [&::-webkit-scrollbar]:hidden"
+            aria-label="Main"
+        >
+            {% if user.is_authenticated %}
+                <a class="app-nav-link{% if request.resolver_match.url_name == 'dashboard' %} app-nav-link-active{% endif %}" href="{% url 'accounts:dashboard' %}">Dashboard</a>
+                <a class="app-nav-link{% if request.resolver_match.url_name == 'profile' or request.resolver_match.url_name == 'edit-profile' %} app-nav-link-active{% endif %}" href="{% url 'accounts:profile' %}">Profile</a>
+                <a class="app-nav-link{% if request.resolver_match.namespace == 'activities' %} app-nav-link-active{% endif %}" href="{% url 'activities:list' %}">Activities</a>
+                {% if user.can_manage_system %}
+                    <a class="app-nav-link{% if request.resolver_match.url_name == 'role-library' or request.resolver_match.url_name == 'role-edit' %} app-nav-link-active{% endif %}" href="{% url 'accounts:role-library' %}">Roles</a>
+                    <a class="app-nav-link{% if request.resolver_match.url_name == 'user-management' or request.resolver_match.url_name == 'user-edit-admin' %} app-nav-link-active{% endif %}" href="{% url 'accounts:user-management' %}">Users</a>
+                {% endif %}
+                <form method="post" action="{% url 'accounts:logout' %}" class="m-0 ml-1 inline">
+                    {% csrf_token %}
+                    <button type="submit" class="app-primary !py-1.5 !px-3.5 !text-xs sm:!text-sm">Log out</button>
+                </form>
+            {% else %}
+                <a class="app-nav-link" href="{% url 'accounts:login' %}">Log in</a>
+                <a class="app-primary !py-1.5 !px-3.5 !text-xs sm:!text-sm" href="{% url 'accounts:register' %}">Register</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+
+<main class="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-12">
+    {% if messages %}
+        <ul class="mb-8 space-y-2" role="list" aria-label="Messages">
+        {% for message in messages %}
+            <li
+                class="{% if 'success' in message.tags %}app-alert-success{% elif 'error' in message.tags %}app-alert-error{% elif 'warning' in message.tags %}app-alert-warning{% else %}app-alert-info{% endif %}"
+                role="status"
+            >
+                {{ message }}
+            </li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="shrink-0 border-t border-slate-200/80 bg-white/60">
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-4 py-8 sm:flex-row sm:px-6 lg:px-8">
+        <div class="flex items-center gap-2.5">
+            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-navy-900 text-[0.6rem] font-bold text-white">CCF</span>
+            <p class="text-sm font-medium text-slate-600">CCF Butuan Activities</p>
+        </div>
+        <p class="text-center text-xs text-slate-400 sm:text-right">Smart attendance for your community &middot; &copy; {% now "Y" %}</p>
+    </div>
+</footer>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

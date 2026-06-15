@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Edit user — CCF Attendance{% endblock %}
+{% block content %}
+<div class="mx-auto w-full max-w-3xl">
+    <div class="mb-8 flex flex-wrap items-end justify-between gap-3">
+        <div>
+            <p class="app-section-label">Administration</p>
+            <h1 class="mt-1 app-page-title !text-2xl sm:!text-3xl">Edit user</h1>
+            <p class="mt-1 text-sm text-slate-500">{{ user_obj.full_name }} ({{ user_obj.email }})</p>
+        </div>
+        <a class="app-secondary" href="{% url 'accounts:user-management' %}">Back to users</a>
+    </div>
+    <div class="app-card app-card-body">
+        <p class="mb-6 text-sm text-slate-600">
+            Assign roles (Ctrl/Cmd + click for several), D-group, and account status, then save.
+        </p>
+        <form method="post" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            {% with dgroup_yes=form.is_part_of_dgroup.value|default:False %}
+            <div class="grid gap-4 sm:grid-cols-2">
+            {% for field in form %}
+                <div class="{% if field.name == "dgroup_leader" or field.name == "avatar" or field.name == "how_did_you_learn" or field.name == "home_address" or field.name == "social_media" or field.name == "roles" or field.name == "life_stage" or field.name == "is_part_of_dgroup" or field.name == "is_profile_completed" or field.name == "is_active" %} sm:col-span-2{% else %} sm:col-span-1{% endif %}{% if field.name == "dgroup_leader" %} dgroup-leader-wrap{% if not dgroup_yes %} hidden{% endif %}{% endif %}">
+                    <label for="{{ field.id_for_label }}" class="app-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <p class="mt-1.5 text-xs text-slate-500">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% if field.errors %}
+                        <p class="mt-1.5 text-xs text-slate-800" role="alert">{% for e in field.errors %}{{ e }}{% if not forloop.last %} {% endif %}{% endfor %}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            </div>
+            {% endwith %}
+            <div class="border-t border-slate-200 pt-6">
+                <button type="submit" class="app-primary">Update user &amp; roles</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    (function () {
+        const yes = document.querySelector("select[name='is_part_of_dgroup']");
+        const leaderWraps = document.querySelectorAll(".dgroup-leader-wrap");
+        const leader = document.querySelector("select[name='dgroup_leader']");
+        if (!yes) return;
+        function sync() {
+            const isYes = yes.value === "True";
+            leaderWraps.forEach((w) => w.classList.toggle("hidden", !isYes));
+            if (leader) {
+                leader.disabled = !isYes;
+                if (!isYes) {
+                    if (leader.options[0]) leader.options[0].selected = true;
+                }
+            }
+        }
+        yes.addEventListener("change", sync);
+        if (document.readyState === "loading")
+            document.addEventListener("DOMContentLoaded", sync);
+        else sync();
+    })();
+</script>
+{% endblock %}

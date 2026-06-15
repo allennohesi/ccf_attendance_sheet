@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}{% if object %}Edit{% else %}New{% endif %} activity — CCF Attendance{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-2xl">
+    <div class="mb-8">
+        <p class="app-section-label">{% if object %}Edit{% else %}Create{% endif %}</p>
+        <h1 class="mt-1 app-page-title !text-2xl sm:!text-3xl">{% if object %}Edit activity{% else %}New activity{% endif %}</h1>
+    </div>
+    <form method="post" class="app-form-card" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="app-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <p class="mt-1.5 text-xs text-slate-500">{{ field.help_text }}</p>
+                {% endif %}
+                {% if field.errors %}
+                    <p class="mt-1.5 text-xs font-medium text-red-600" role="alert">{% for e in field.errors %}{{ e }}{% if not forloop.last %} {% endif %}{% endfor %}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <div class="flex flex-wrap gap-2 border-t border-slate-100 pt-5">
+            <button type="submit" class="app-primary">Save activity</button>
+            <a class="app-secondary" href="{% url 'activities:list' %}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}CCF Attendance — Smart Attendance Management{% endblock %}
+
+{% block content %}
+<section class="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white px-6 py-14 text-center shadow-card sm:px-12 sm:py-20" aria-labelledby="hero-heading">
+    <div class="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-brand-100/60 blur-3xl" aria-hidden="true"></div>
+    <div class="pointer-events-none absolute -bottom-20 -left-20 h-56 w-56 rounded-full bg-slate-100 blur-3xl" aria-hidden="true"></div>
+    <div class="relative mx-auto max-w-3xl">
+        <p class="app-section-label">Church &amp; community events</p>
+        <h1 id="hero-heading" class="mt-3 text-balance text-3xl font-bold tracking-tight text-navy-900 sm:text-5xl">
+            Smart attendance for CCF activities
+        </h1>
+        <p class="mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-slate-600 sm:text-lg">
+            Check in with QR codes, track who attended, and export reports — all in one clean, professional platform built for your ministry.
+        </p>
+        <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
+            <a class="app-primary px-6 py-3 text-base" href="{% url 'accounts:register' %}">Get started free</a>
+            <a class="app-secondary px-6 py-3 text-base" href="{% url 'accounts:login' %}">Sign in</a>
+        </div>
+    </div>
+</section>
+
+<section class="mt-16 sm:mt-20" aria-labelledby="features-heading">
+    <div class="text-center">
+        <h2 id="features-heading" class="text-2xl font-bold tracking-tight text-navy-900 sm:text-3xl">
+            Everything your team needs
+        </h2>
+        <p class="mx-auto mt-2 max-w-xl text-sm text-slate-500 sm:text-base">
+            Purpose-built for CCF Butuan — simple for participants, powerful for leaders.
+        </p>
+    </div>
+    <ul class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <li class="app-card group p-6 text-left transition hover:border-brand-200 hover:shadow-card-hover">
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            </span>
+            <h3 class="mt-4 text-base font-bold text-navy-900">Registration</h3>
+            <p class="mt-2 text-sm leading-relaxed text-slate-500">Guided sign-up, profile completion, and a unique QR code for every member.</p>
+        </li>
+        <li class="app-card group p-6 text-left transition hover:border-brand-200 hover:shadow-card-hover">
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </span>
+            <h3 class="mt-4 text-base font-bold text-navy-900">Role assignment</h3>
+            <p class="mt-2 text-sm leading-relaxed text-slate-500">Admin, volunteer, D-Group leader, and participant roles — organized and clear.</p>
+        </li>
+        <li class="app-card group p-6 text-left transition hover:border-brand-200 hover:shadow-card-hover">
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
+            </span>
+            <h3 class="mt-4 text-base font-bold text-navy-900">QR check-in</h3>
+            <p class="mt-2 text-sm leading-relaxed text-slate-500">Scan on-site with camera, photo upload, or paste code — flexible for any setup.</p>
+        </li>
+        <li class="app-card group p-6 text-left transition hover:border-brand-200 hover:shadow-card-hover">
+            <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </span>
+            <h3 class="mt-4 text-base font-bold text-navy-900">Reports &amp; exports</h3>
+            <p class="mt-2 text-sm leading-relaxed text-slate-500">Dashboards for managers and CSV exports when you need the full picture.</p>
+        </li>
+    </ul>
+</section>
+
+<section class="mt-16 sm:mt-20" aria-labelledby="how-heading">
+    <div class="text-center">
+        <h2 id="how-heading" class="text-2xl font-bold tracking-tight text-navy-900 sm:text-3xl">How it works</h2>
+        <p class="mx-auto mt-2 max-w-md text-sm text-slate-500 sm:text-base">Three steps from signup to a complete attendance list.</p>
+    </div>
+    <ol class="mt-10 grid gap-6 sm:grid-cols-3">
+        <li class="relative app-card p-6 text-left">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-navy-900 text-xs font-bold text-white">1</span>
+            <h3 class="mt-4 text-base font-bold text-navy-900">Register &amp; complete profile</h3>
+            <p class="mt-2 text-sm leading-relaxed text-slate-500">Collect ministry details once — members fill in what leaders need.</p>
+        </li>
+        <li class="relative app-card p-6 text-left">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-navy-900 text-xs font-bold text-white">2</span>
+            <h3 class="mt-4 text-base font-bold text-navy-900">Join activities &amp; get your QR</h3>
+            <p class="mt-2 text-sm leading-relaxed text-slate-500">One personal QR code works across every event in the system.</p>
+        </li>
+        <li class="relative app-card p-6 text-left">
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-navy-900 text-xs font-bold text-white">3</span>
+            <h3 class="mt-4 text-base font-bold text-navy-900">Leaders scan, you&apos;re on the list</h3>
+            <p class="mt-2 text-sm leading-relaxed text-slate-500">Managers see full attendance; members see only their own check-in.</p>
+        </li>
+    </ol>
+</section>
+
+<section class="mt-16 overflow-hidden rounded-3xl bg-navy-900 px-6 py-12 text-center sm:mt-20 sm:px-12 sm:py-16" aria-labelledby="cta-heading">
+    <div class="relative mx-auto max-w-2xl">
+        <h2 id="cta-heading" class="text-2xl font-bold tracking-tight text-white sm:text-3xl">Ready for your next activity?</h2>
+        <p class="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-slate-300 sm:text-base">
+            Create an account or sign in to open your dashboard, browse activities, and manage your profile.
+        </p>
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <a class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-bold text-navy-900 shadow-sm transition hover:bg-brand-50" href="{% url 'accounts:register' %}">Create an account</a>
+            <a class="inline-flex items-center justify-center rounded-lg border border-slate-600 px-6 py-3 text-sm font-semibold text-white transition hover:border-slate-500 hover:bg-white/5" href="{% url 'accounts:login' %}">I already have an account</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+{% block title %}Scan — {{ activity.name }}{% endblock %}
+{% block content %}
+<div class="mb-6">
+    <p class="app-section-label">Check-in</p>
+    <h1 class="mt-1 app-page-title !text-2xl sm:!text-3xl">Scan attendance</h1>
+    <p class="app-page-subtitle">{{ activity.name }} · {{ activity.date|date:"M d, Y · h:i A" }} — {{ activity.location }}</p>
+</div>
+<div class="grid gap-6 lg:grid-cols-2">
+    <section class="app-card app-card-body" aria-labelledby="scan-label">
+        <h2 id="scan-label" class="sr-only">Scan methods</h2>
+
+        <p class="mt-4 text-sm text-slate-600" id="lan-notice" hidden>
+            <strong>Using this app by network IP (http://…):</strong> the browser will not start the <em>live</em> camera on plain HTTP. You can still check someone in with <strong>upload a photo of the QR</strong> or <strong>paste the code</strong> below. For live scanning over the network, serve the site with HTTPS.
+        </p>
+
+        <div class="mt-4">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-brand-600">1. Live camera</h2>
+            <div
+                id="reader"
+                class="mt-2 w-full min-h-56 rounded-xl border-2 border-dashed border-brand-100 bg-brand-50/30 p-1"
+            ></div>
+            <p class="mt-1 text-xs text-slate-500" id="camera-fallback-hint" hidden>Camera is not available here—use section 2 or 3.</p>
+        </div>
+
+        <div class="mt-6 border-t border-slate-200 pt-6">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-brand-600">2. Photo of the QR</h2>
+            <p class="mt-1 text-xs text-slate-500">Choose a clear photo or screenshot of the person’s attendance QR (no live camera required).</p>
+            <div class="mt-2">
+                <label for="qr-file" class="mb-1 block text-sm text-slate-700">Image file</label>
+                <input
+                    type="file"
+                    id="qr-file"
+                    name="qr-file"
+                    accept="image/*"
+                    class="block w-full max-w-md text-sm text-slate-600 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-800"
+                />
+            </div>
+        </div>
+
+        <div class="mt-6 border-t border-slate-200 pt-6">
+            <h2 class="text-xs font-bold uppercase tracking-wider text-brand-600">3. Paste code</h2>
+            <p class="mt-1 text-xs text-slate-500">If you already know the value (e.g. UUID) shown in their QR, paste it here.</p>
+            <div class="mt-2 flex max-w-2xl flex-col gap-2 sm:flex-row sm:items-stretch">
+                <label for="qr-paste" class="sr-only">QR or UUID</label>
+                <input
+                    type="text"
+                    id="qr-paste"
+                    class="w-full min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 shadow-sm focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/15"
+                    placeholder="e.g. 550e8400-e29b-…"
+                    autocomplete="off"
+                />
+                <button type="button" class="app-primary shrink-0" id="qr-paste-btn">Check in</button>
+            </div>
+        </div>
+    </section>
+    <section class="app-card app-card-body" aria-live="polite" aria-atomic="true">
+        <h2 class="text-base font-bold text-navy-900">Result</h2>
+        <p class="mt-1 text-xs text-slate-500">Check-in response appears here.</p>
+        <div
+            id="resultBox"
+            class="result-idle mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700"
+        >Use the camera (if it starts), or upload a QR image, or paste the code.</div>
+    </section>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" type="text/javascript"></script>
+<script>
+const resultBox = document.getElementById("resultBox");
+const endpoint = "{% url 'attendance:scan-api' activity.id %}";
+const lanNotice = document.getElementById("lan-notice");
+const cameraFallbackHint = document.getElementById("camera-fallback-hint");
+let lastScannedText = "";
+let isSending = false;
+const successAudio = new Audio("data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=");
+
+const clsIdle = "result-idle mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700";
+const clsOk = "result-ok mt-4 rounded-xl border px-4 py-4 text-sm font-medium";
+const clsErr = "result-err mt-4 rounded-xl border px-4 py-4 text-sm font-medium";
+
+function canUseLiveCamera() {
+    return window.isSecureContext;
+}
+
+if (!window.isSecureContext && lanNotice) {
+    lanNotice.hidden = false;
+}
+
+function updateResult(message, ok) {
+    if (ok === true) {
+        resultBox.className = clsOk;
+    } else if (ok === false) {
+        resultBox.className = clsErr;
+    } else {
+        resultBox.className = clsIdle;
+    }
+    resultBox.textContent = message;
+    if (ok) {
+        successAudio.play().catch(function () {});
+        if (navigator.vibrate) {
+            navigator.vibrate(120);
+        }
+    }
+}
+
+function humanizeCameraError(e) {
+    if (!e) {
+        return "Camera could not be started. Use “Photo of the QR” or “Paste code” above.";
+    }
+    const n = e.name || "";
+    const m = (e.message || "").toLowerCase();
+    if (n === "NotAllowedError" || n === "PermissionDeniedError") {
+        return "Camera was blocked. Allow it in the address bar, or use photo upload / paste code.";
+    }
+    if (n === "NotFoundError" || n === "DevicesNotFoundError") {
+        return "No camera found. Use photo upload or paste the code.";
+    }
+    if (n === "NotReadableError" || n === "TrackStartError" || m.indexOf("in use") >= 0) {
+        return "Camera in use. Close other apps or use photo / paste below.";
+    }
+    if (n === "OverconstrainedError" || n === "ConstraintNotSatisfiedError") {
+        return "Could not use this camera. Use photo upload or paste the code.";
+    }
+    if (n === "SecurityError" || m.indexOf("insecure") >= 0 || m.indexOf("not supported") >= 0) {
+        return "Live camera is blocked on this address (use HTTPS for camera, or use section 2 or 3).";
+    }
+    return (e.message || "Camera error") + " — You can use photo or paste code instead.";
+}
+
+function submitScannedValue(raw) {
+    var text = (raw && String(raw).trim) ? String(raw).trim() : "";
+    if (!text) {
+        updateResult("No code to send. Upload an image, paste a value, or use the live camera if available.", false);
+        return;
+    }
+    onScanSuccess(text);
+}
+
+async function onScanSuccess(decodedText) {
+    if (isSending || decodedText === lastScannedText) {
+        return;
+    }
+    isSending = true;
+    lastScannedText = decodedText;
+
+    try {
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}",
+            },
+            body: JSON.stringify({ qr_uuid: decodedText }),
+        });
+        const payload = await response.json();
+        updateResult(payload.message, payload.ok);
+    } catch (error) {
+        updateResult("Unable to submit. Check your connection and try again.", false);
+    } finally {
+        setTimeout(function () {
+            lastScannedText = "";
+            isSending = false;
+        }, 1000);
+    }
+}
+
+const config = { fps: 10, qrbox: { width: 280, height: 280 } };
+const html5QrCode = new Html5Qrcode("reader");
+
+document.getElementById("qr-file").addEventListener("change", function (ev) {
+    var file = ev.target && ev.target.files && ev.target.files[0];
+    if (!file) {
+        return;
+    }
+    updateResult("Decoding image…", null);
+    html5QrCode
+        .scanFile(file, true)
+        .then(function (text) {
+            onScanSuccess(text);
+        })
+        .catch(function (e) {
+            updateResult("Could not read a QR from that image. Try a sharper photo, or paste the code. (" + (e && e.message ? e.message : "error") + ")", false);
+        });
+    ev.target.value = "";
+});
+
+document.getElementById("qr-paste-btn").addEventListener("click", function () {
+    var v = document.getElementById("qr-paste").value;
+    submitScannedValue(v);
+});
+
+document.getElementById("qr-paste").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        submitScannedValue(e.target.value);
+    }
+});
+
+function pickDeviceIds(devices) {
+    if (!devices || !devices.length) {
+        return [];
+    }
+    const labels = devices.map(function (d) { return d.label || ""; });
+    const order = devices.map(function (d, i) {
+        return { id: d.id, score: 0, i: i };
+    });
+    order.forEach(function (o) {
+        const lab = (labels[o.i] || "").toLowerCase();
+        if (/back|rear|environment|wide/i.test(lab)) {
+            o.score += 3;
+        }
+        if (/usb|hd|webcam|integrated/i.test(lab)) {
+            o.score += 1;
+        }
+    });
+    order.sort(function (a, b) { return b.score - a.score; });
+    const out = order.map(function (o) { return o.id; });
+    const unique = [];
+    out.forEach(function (id) {
+        if (unique.indexOf(id) < 0) {
+            unique.push(id);
+        }
+    });
+    return unique;
+}
+
+async function stopIfRunning() {
+    try {
+        await html5QrCode.stop();
+    } catch (e) { /* not running */ }
+}
+
+function startOrPromise(args) {
+    var p = html5QrCode.start.apply(html5QrCode, args);
+    if (p && typeof p.then === "function") {
+        return p;
+    }
+    return Promise.resolve();
+}
+
+async function startWithDeviceId(deviceId) {
+    await startOrPromise([
+        deviceId,
+        config,
+        onScanSuccess,
+        function () { }
+    ]);
+}
+
+async function startWithFacing(facing) {
+    await startOrPromise([
+        { facingMode: facing },
+        config,
+        onScanSuccess,
+        function () { }
+    ]);
+}
+
+function tryStartLiveCamera() {
+    (async function () {
+        if (!canUseLiveCamera()) {
+            if (cameraFallbackHint) {
+                cameraFallbackHint.hidden = false;
+            }
+            return;
+        }
+        let devices;
+        try {
+            devices = await Html5Qrcode.getCameras();
+        } catch (e) {
+            if (cameraFallbackHint) {
+                cameraFallbackHint.hidden = false;
+            }
+            return;
+        }
+        if (!devices || !devices.length) {
+            if (cameraFallbackHint) {
+                cameraFallbackHint.hidden = false;
+            }
+            return;
+        }
+        const ids = pickDeviceIds(devices);
+        for (var i = 0; i < ids.length; i += 1) {
+            if (i > 0) {
+                await stopIfRunning();
+            }
+            try {
+                await startWithDeviceId(ids[i]);
+                return;
+            } catch (e1) { /* try next */ }
+        }
+        if (ids.length) {
+            await stopIfRunning();
+        }
+        try {
+            await startWithFacing("environment");
+            return;
+        } catch (e2) { /* */ }
+        try {
+            await startWithFacing("user");
+            return;
+        } catch (e3) { /* */ }
+        if (cameraFallbackHint) {
+            cameraFallbackHint.hidden = false;
+        }
+    })();
+}
+
+tryStartLiveCamera();
+</script>
+{% endblock %}

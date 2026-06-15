@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Activities — CCF Attendance{% endblock %}
+{% block content %}
+<div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <p class="app-section-label">Events</p>
+        <h1 class="mt-1 app-page-title">Activities</h1>
+        <p class="app-page-subtitle">Upcoming and past CCF events.</p>
+    </div>
+    {% if user.can_manage_system %}
+        <a class="app-primary" href="{% url 'activities:create' %}">New activity</a>
+    {% endif %}
+</div>
+
+<div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    {% for activity in activities %}
+        <article class="app-card group flex h-full flex-col transition hover:border-brand-200 hover:shadow-card-hover">
+            <div class="border-b border-slate-100 px-5 py-4 sm:px-6">
+                <span class="app-badge-brand">{{ activity.date|date:"M d, Y" }}</span>
+                <h2 class="mt-3 text-base font-bold text-navy-900 group-hover:text-brand-700">{{ activity.name }}</h2>
+                <p class="mt-1 text-xs font-medium text-slate-500">{{ activity.date|date:"h:i A" }} &middot; {{ activity.location }}</p>
+            </div>
+            <div class="flex flex-1 flex-col px-5 py-4 sm:px-6">
+                <p class="line-clamp-3 flex-1 text-sm leading-relaxed text-slate-500">{{ activity.description|default:"No description provided." }}</p>
+                <div class="mt-5">
+                    <a class="app-secondary w-full justify-center sm:w-auto" href="{% url 'activities:detail' activity.id %}">View details</a>
+                </div>
+            </div>
+        </article>
+    {% empty %}
+        <div class="app-card col-span-full px-6 py-16 text-center sm:col-span-2 lg:col-span-3">
+            <p class="text-sm text-slate-500">No activities yet.{% if user.can_manage_system %} Create one to get started.{% endif %}</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

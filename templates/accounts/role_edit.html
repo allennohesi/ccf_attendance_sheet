@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Edit role — CCF Attendance{% endblock %}
+{% block content %}
+<div class="mx-auto w-full max-w-md">
+    <div class="mb-8 flex flex-wrap items-end justify-between gap-3">
+        <div>
+            <p class="app-section-label">Administration</p>
+            <h1 class="mt-1 app-page-title !text-2xl sm:!text-3xl">Edit role</h1>
+        </div>
+        <a class="app-secondary" href="{% url 'accounts:role-library' %}">Back</a>
+    </div>
+    <form method="post" class="app-form-card" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="app-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <p class="mt-1.5 text-xs text-slate-500">{{ field.help_text }}</p>
+                {% endif %}
+                {% if field.errors %}
+                    <p class="mt-1.5 text-xs text-slate-800" role="alert">{% for e in field.errors %}{{ e }}{% if not forloop.last %} {% endif %}{% endfor %}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+        <div class="flex flex-wrap gap-2 border-t border-slate-200 pt-6">
+            <button type="submit" class="app-primary">Update</button>
+            <a class="app-secondary" href="{% url 'accounts:role-library' %}">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

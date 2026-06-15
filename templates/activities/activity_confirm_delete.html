@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Delete activity — CCF Attendance{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-md">
+    <div class="app-card app-card-body text-center sm:text-left">
+        <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600 sm:mx-0">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </span>
+        <h1 class="mt-4 text-xl font-bold text-navy-900 sm:text-2xl">Delete this activity?</h1>
+        <p class="mt-2 text-sm text-slate-600">
+            <span class="font-semibold text-slate-800">{{ object.name }}</span> and all related attendance records will be permanently removed.
+        </p>
+        <form method="post" class="mt-8">
+            {% csrf_token %}
+            <div class="flex flex-wrap justify-center gap-2 sm:justify-start">
+                <button type="submit" class="app-danger">Yes, delete</button>
+                <a class="app-secondary" href="{% url 'activities:detail' object.id %}">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — CCF Attendance{% endblock %}
+{% block content %}
+<div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <p class="app-section-label">Administration</p>
+        <h1 class="mt-1 app-page-title">Dashboard</h1>
+        <p class="app-page-subtitle">Overview of users, attendance, and recent activity.</p>
+    </div>
+    <div class="flex flex-wrap gap-2">
+        <a class="app-secondary" href="{% url 'accounts:user-management' %}">User management</a>
+        <a class="app-primary" href="{% url 'accounts:role-library' %}">Role library</a>
+    </div>
+</div>
+
+<div class="grid gap-4 sm:grid-cols-3">
+    <div class="app-stat">
+        <div class="flex items-start justify-between">
+            <p class="app-stat-label">Total users</p>
+            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            </span>
+        </div>
+        <p class="app-stat-value">{{ total_users }}</p>
+    </div>
+    <div class="app-stat">
+        <div class="flex items-start justify-between">
+            <p class="app-stat-label">Attendance records</p>
+            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+            </span>
+        </div>
+        <p class="app-stat-value">{{ total_records }}</p>
+    </div>
+    <div class="app-stat">
+        <div class="flex items-start justify-between">
+            <p class="app-stat-label">Role types</p>
+            <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+            </span>
+        </div>
+        <p class="app-stat-value">{{ total_roles }}</p>
+    </div>
+</div>
+
+{% if activity_attendance %}
+    {{ activity_attendance|json_script:"attendance-chart-data" }}
+    <section class="app-card mt-8" aria-labelledby="chart-title">
+        <div class="app-card-header">
+            <h2 id="chart-title" class="text-base font-bold text-navy-900">Top activities by check-ins</h2>
+            <p class="mt-1 text-xs text-slate-500">Up to 10 activities with the most attendance records.</p>
+        </div>
+        <div class="app-card-body pt-2">
+            <div class="h-72 w-full min-h-[16rem] max-w-4xl">
+                <canvas id="adminAttendanceChart" class="max-h-72" aria-label="Bar chart of attendance by activity" role="img"></canvas>
+            </div>
+        </div>
+    </section>
+{% endif %}
+
+<div class="mt-8 grid gap-6 lg:grid-cols-2">
+    <section class="app-card" aria-labelledby="recent-act">
+        <div class="app-card-header">
+            <h2 id="recent-act" class="text-base font-bold text-navy-900">Recent activities</h2>
+        </div>
+        <ul class="divide-y divide-slate-100">
+        {% for activity in activities %}
+            <li class="flex items-center justify-between gap-3 px-5 py-3.5 transition hover:bg-slate-50/80 sm:px-6">
+                <span class="text-sm font-medium text-slate-800">{{ activity.name }}</span>
+                <a class="app-secondary !py-1.5 !px-3 !text-xs" href="{% url 'activities:detail' activity.id %}">View</a>
+            </li>
+        {% empty %}
+            <li class="px-6 py-10 text-center text-sm text-slate-500">No activities yet.</li>
+        {% endfor %}
+        </ul>
+    </section>
+    <section class="app-card" aria-labelledby="top-act">
+        <div class="app-card-header">
+            <h2 id="top-act" class="text-base font-bold text-navy-900">Top attendance</h2>
+        </div>
+        <ul class="divide-y divide-slate-100">
+        {% for row in activity_attendance %}
+            <li class="flex items-center justify-between gap-3 px-5 py-3.5 text-sm sm:px-6">
+                <span class="font-medium text-slate-800">{{ row.activity__name }}</span>
+                <span class="app-badge-brand tabular-nums">{{ row.total }}</span>
+            </li>
+        {% empty %}
+            <li class="px-6 py-10 text-center text-sm text-slate-500">No attendance records yet.</li>
+        {% endfor %}
+        </ul>
+    </section>
+</div>
+{% endblock %}
+{% block extra_js %}
+    {% if activity_attendance %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+    <script>
+    (function () {
+        if (typeof Chart === "undefined") return;
+        var el = document.getElementById("attendance-chart-data");
+        if (!el) return;
+        var data;
+        try { data = JSON.parse(el.textContent); } catch (e) { return; }
+        if (!data || !data.length) return;
+        var labels = data.map(function (r) {
+            var n = (r && r["activity__name"]) ? String(r["activity__name"]) : "—";
+            return n.length > 42 ? n.slice(0, 40) + "…" : n;
+        });
+        var values = data.map(function (r) { return (r && typeof r.total === "number") ? r.total : 0; });
+        var canvas = document.getElementById("adminAttendanceChart");
+        if (!canvas) return;
+        new Chart(canvas, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Check-ins",
+                    data: values,
+                    backgroundColor: "rgba(13, 148, 136, 0.75)",
+                    borderColor: "rgba(13, 148, 136, 1)",
+                    borderWidth: 0,
+                    borderRadius: 6,
+                }],
+            },
+            options: {
+                indexAxis: "y",
+                responsive: true,
+                maintainAspectRatio: false,
+                devicePixelRatio: (typeof window.devicePixelRatio === "number" && window.devicePixelRatio > 1) ? window.devicePixelRatio : 1.5,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        grid: { color: "rgb(241 245 249)" },
+                        ticks: { color: "rgb(100 116 139)", font: { size: 11 } },
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: "rgb(15 23 42)", font: { size: 11, weight: "500" }, maxRotation: 0 },
+                    },
+                },
+            },
+        });
+    })();
+    </script>
+    {% endif %}
+{% endblock %}

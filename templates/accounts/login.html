@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Log in — CCF Attendance{% endblock %}
+{% block content %}
+<div class="mx-auto w-full max-w-md">
+    <div class="mb-8 text-center">
+        <p class="app-section-label">Welcome back</p>
+        <h1 class="mt-2 app-page-title !text-2xl sm:!text-3xl">Sign in to your account</h1>
+        <p class="app-page-subtitle">Use your registered email and password.</p>
+    </div>
+    <form method="post" class="app-form-card" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="app-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <p class="mt-1.5 text-xs font-medium text-red-600" role="alert">{% for e in field.errors %}{{ e }}{% if not forloop.last %} {% endif %}{% endfor %}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+        {% if form.non_field_errors %}
+            <div class="app-alert-error" role="alert">
+                {% for e in form.non_field_errors %}{{ e }}{% endfor %}
+            </div>
+        {% endif %}
+        <button type="submit" class="app-primary w-full !py-3">Sign in</button>
+    </form>
+    <p class="mt-6 text-center text-sm text-slate-500">
+        No account yet?
+        <a class="font-semibold text-brand-700 underline decoration-brand-200 underline-offset-2 transition hover:decoration-brand-500" href="{% url 'accounts:register' %}">Create one</a>
+    </p>
+</div>
+{% endblock %}

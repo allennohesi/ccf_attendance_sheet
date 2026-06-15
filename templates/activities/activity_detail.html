@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}{{ activity.name }} — CCF Attendance{% endblock %}
+{% block content %}
+<div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+        <p class="app-section-label">Activity</p>
+        <h1 class="mt-1 app-page-title !text-2xl sm:!text-3xl">{{ activity.name }}</h1>
+        <p class="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+            <span class="app-badge-brand">{{ activity.date|date:"M d, Y · h:i A" }}</span>
+            <span>{{ activity.location }}</span>
+        </p>
+    </div>
+    {% if user.can_manage_system %}
+    <div class="flex flex-wrap gap-2">
+        <a class="app-primary" href="{% url 'attendance:scan' activity.id %}">Open scanner</a>
+        <a class="app-secondary" href="{% url 'activities:export' activity.id %}">Export CSV</a>
+        <a class="app-ghost border border-slate-200" href="{% url 'activities:edit' activity.id %}">Edit</a>
+        <a class="app-danger" href="{% url 'activities:delete' activity.id %}">Delete</a>
+    </div>
+    {% endif %}
+</div>
+
+<section class="app-card" aria-labelledby="att-heading">
+    <div class="app-card-header">
+        <h2 id="att-heading" class="text-base font-bold text-navy-900">Description</h2>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600">{{ activity.description|default:"No description." }}</p>
+    </div>
+    <div class="app-card-body border-t border-slate-100">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+                <h2 class="text-base font-bold text-navy-900">Attendance</h2>
+                {% if can_view_full_attendance %}
+                    <p class="mt-1 text-xs text-slate-500">Full list visible to system managers only.</p>
+                {% endif %}
+            </div>
+            {% if can_view_full_attendance and attendance_records %}
+            <div class="w-full max-w-sm">
+                <label for="attendance-filter" class="sr-only">Filter rows</label>
+                <input
+                    type="search"
+                    id="attendance-filter"
+                    class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 shadow-sm placeholder:text-slate-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/15"
+                    placeholder="Filter by name, email, status…"
+                    autocomplete="off"
+                >
+            </div>
+            {% endif %}
+        </div>
+        {% if can_view_full_attendance %}
+        <div class="mt-5 overflow-x-auto">
+            <table class="app-table min-w-[36rem]" id="att-full-table" data-filterable="1">
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Timestamp</th>
+                        <th scope="col">Status</th>
+                        {% if user.can_manage_system %}<th class="w-24 text-right" scope="col">Actions</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                {% for record in attendance_records %}
+                    <tr class="att-tr">
+                        <td class="font-medium">{{ record.user.full_name }}</td>
+                        <td class="text-slate-500">{{ record.user.email }}</td>
+                        <td class="tabular-nums text-slate-500">{{ record.timestamp|date:"M d, Y" }}</td>
+                        <td><span class="app-badge">{{ record.get_status_display }}</span></td>
+                        {% if user.can_manage_system %}
+                        <td class="text-right text-nowrap">
+                            <form
+                                method="post"
+                                action="{% url 'attendance:attendance-delete' activity.id record.id %}"
+                                class="inline"
+                                onsubmit="return confirm('Remove this person from the attendance list?');"
+                            >
+                                {% csrf_token %}
+                                <button type="submit" class="app-ghost !px-2 text-red-600 hover:bg-red-50">Remove</button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td class="py-12 text-center text-slate-500" colspan="{% if user.can_manage_system %}5{% else %}4{% endif %}">No attendance yet.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="mt-3 text-sm text-slate-600">For privacy, only your own check-in is shown below.</p>
+        <div class="mt-5 overflow-x-auto">
+            <table class="app-table min-w-[20rem]">
+                <thead>
+                    <tr>
+                        <th scope="col">Your name</th>
+                        <th scope="col">Your email</th>
+                        <th scope="col">Timestamp</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% if my_attendance %}
+                    <tr class="att-tr">
+                        <td class="font-medium">{{ my_attendance.user.full_name }}</td>
+                        <td class="text-slate-500">{{ my_attendance.user.email }}</td>
+                        <td class="tabular-nums text-slate-500">{{ my_attendance.timestamp|date:"M d, Y h:i A" }}</td>
+                        <td><span class="app-badge">{{ my_attendance.get_status_display }}</span></td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td class="py-12 text-center text-slate-500" colspan="4">You have not checked in for this activity yet.</td>
+                    </tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+{% block extra_js %}
+{% if can_view_full_attendance and attendance_records %}
+<script>
+    (function () {
+        const inp = document.getElementById("attendance-filter");
+        const table = document.getElementById("att-full-table");
+        if (!inp || !table) return;
+        const rows = table.querySelectorAll("tbody tr.att-tr");
+        inp.addEventListener("input", function () {
+            const q = this.value.trim().toLowerCase();
+            rows.forEach(function (row) {
+                const text = (row.textContent || "").toLowerCase();
+                row.classList.toggle("hidden", q && text.indexOf(q) < 0);
+            });
+        });
+    })();
+</script>
+{% endif %}
+{% endblock %}

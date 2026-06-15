@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Role library — CCF Attendance{% endblock %}
+{% block content %}
+<div class="mb-8 flex flex-wrap items-end justify-between gap-4">
+    <div>
+        <p class="app-section-label">Administration</p>
+        <h1 class="mt-1 app-page-title">Role library</h1>
+        <p class="app-page-subtitle">Create role types and assign them from User management.</p>
+    </div>
+    <span class="app-badge-brand">{{ roles|length }} defined</span>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-2 lg:gap-8">
+    <div class="app-card overflow-hidden">
+        <div class="app-card-header">
+            <h2 class="text-base font-bold text-navy-900">All roles</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="app-table min-w-[28rem]" aria-describedby="role-list-desc">
+                <caption id="role-list-desc" class="sr-only">All roles, codes, and status</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Code</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Users</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for role in roles %}
+                    <tr>
+                        <td class="font-mono text-xs text-slate-600">{{ role.code }}</td>
+                        <td class="font-medium">{{ role.name }}</td>
+                        <td><span class="app-badge tabular-nums">{{ role.user_count }}</span></td>
+                        <td>
+                            {% if role.is_active %}
+                                <span class="app-badge-brand">Active</span>
+                            {% else %}
+                                <span class="app-badge">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-right text-nowrap">
+                            <a class="app-ghost !px-2" href="{% url 'accounts:role-edit' role.id %}">Edit</a>
+                            <form method="post" action="{% url 'accounts:role-delete' role.id %}" class="inline" onsubmit="return confirm('Delete this role?');">
+                                {% csrf_token %}
+                                <button type="submit" class="app-ghost !px-2 text-red-600 hover:bg-red-50 hover:text-red-700">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td class="py-12 text-center text-slate-500" colspan="5">No roles yet. Add one in the form.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="app-card h-fit">
+        <div class="app-card-header">
+            <h2 class="text-base font-bold text-navy-900">Add role</h2>
+            <p class="mt-0.5 text-xs text-slate-500">A clear name and a stable code for reporting.</p>
+        </div>
+        <form method="post" class="app-card-body space-y-4">
+            {% csrf_token %}
+            {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="app-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <p class="mt-1.5 text-xs text-slate-500">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% if field.errors %}
+                        <p class="mt-1.5 text-xs font-medium text-red-600" role="alert">{% for e in field.errors %}{{ e }}{% if not forloop.last %} {% endif %}{% endfor %}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="app-primary w-full">Save role</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

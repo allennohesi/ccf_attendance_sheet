@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}User management — CCF Attendance{% endblock %}
+{% block extra_head %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <p class="app-section-label">Administration</p>
+    <h1 class="mt-1 app-page-title">User management</h1>
+    <p class="app-page-subtitle">Search and manage participants. Edit a user to assign or update roles.</p>
+</div>
+
+<div class="app-card overflow-hidden">
+    <div class="overflow-x-auto p-0">
+        <table
+            class="cell-border display w-full text-sm"
+            id="user-management-table"
+            data-datatable-url="{% url 'accounts:user-management-data' %}"
+        >
+            <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Mobile</th>
+                <th scope="col">Roles</th>
+                <th scope="col">Actions</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script>
+        (function () {
+            const el = document.getElementById("user-management-table");
+            if (!el) return;
+            const url = el.getAttribute("data-datatable-url");
+            jQuery("#user-management-table").DataTable({
+                processing: true,
+                serverSide: true,
+                pageLength: 12,
+                lengthMenu: [12, 25, 50, 100],
+                deferRender: true,
+                autoWidth: true,
+                stateSave: true,
+                stateDuration: 60 * 60 * 24 * 7,
+                orderMulti: false,
+                ajax: {url: url, type: "GET"},
+                order: [[0, "asc"]],
+                language: {search: "Search participants", searchPlaceholder: "Name, email, mobile…"},
+                columnDefs: [
+                    {orderable: false, targets: [3, 4]},
+                    {targets: [3, 4], type: "html"},
+                ],
+            });
+        })();
+    </script>
+{% endblock %}
